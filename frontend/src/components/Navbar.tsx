@@ -9,7 +9,8 @@ interface NavbarProps {
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ health, loadingHealth, onRefreshHealth }) => {
-  const apiUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+  const apiUrl = import.meta.env.VITE_API_BASE_URL || '';
+  const docsUrl = apiUrl ? `${apiUrl}/docs` : '/docs';
 
   return (
     <header className="navbar">
@@ -47,7 +48,7 @@ export const Navbar: React.FC<NavbarProps> = ({ health, loadingHealth, onRefresh
           </div>
 
           <a
-            href={`${apiUrl}/docs`}
+            href={docsUrl}
             target="_blank"
             rel="noreferrer"
             className="docs-link-btn"

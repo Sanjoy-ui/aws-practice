@@ -4,54 +4,20 @@ A complete full-stack web application featuring an MVC FastAPI backend connected
 
 ---
 
-## 🏗️ Architecture
+## 🏗️ Architecture (Same-Origin / Zero-CORS)
+
+The application uses a **Same-Origin Reverse Proxy Architecture**, eliminating cross-origin requests, preflight `OPTIONS` requests, and CORS configuration entirely:
 
 ```
-webproject/
-├── backend/                       # FastAPI Backend (MVC Architecture)
-│   ├── app/
-│   │   ├── routes/                # API endpoint definitions
-│   │   ├── controllers/           # Request orchestration & HTTP handlers
-│   │   ├── services/              # Business logic & database queries
-│   │   ├── models/                # SQLAlchemy ORM models
-│   │   ├── schemas/               # Pydantic validation schemas (DTOs)
-│   │   ├── config.py              # Environment configuration & CORS parser
-│   │   ├── database.py            # SQLAlchemy database engine & session
-│   │   └── main.py                # App entrypoint & CORS middleware
-│   ├── .env                       # Backend settings (DB URL & CORS Origins)
-│   ├── requirements.txt
-│   └── run.py
-│
-└── frontend/                      # React Frontend (Vite + TypeScript)
-    ├── src/
-    │   ├── components/            # UI components (Navbar, ItemForm, ItemList, Modal)
-    │   ├── services/              # API Client (CRUD and Health)
-    │   ├── types/                 # TypeScript interfaces
-    │   ├── App.tsx
-    │   └── index.css
-    ├── .env                       # Frontend settings (VITE_API_BASE_URL)
-    └── package.json
+[ Browser ] ───> Same Origin (http://localhost:5173 or https://yourdomain.com)
+                      │
+                      ├─── /* ───────────> React Frontend (Vite / S3)
+                      └─── /api/*, /health > FastAPI Backend (via Vite Proxy in Dev / CloudFront in AWS)
 ```
 
----
-
-## 🌐 CORS Configuration via Environment Variables
-
-CORS is explicitly configured between both tiers using `.env` files:
-
-### 1. Backend ([`backend/.env`](backend/.env))
-```env
-# Allowed frontend origins (comma-separated or JSON list)
-CORS_ORIGINS="http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173"
-```
-The backend parses this in `app/config.py` and feeds it to `CORSMiddleware` in `app/main.py`.
-
-### 2. Frontend ([`frontend/.env`](frontend/.env))
-```env
-# URL where the FastAPI backend is running
-VITE_API_BASE_URL=http://localhost:8000
-```
-The frontend API client (`src/services/api.ts`) automatically uses this URL for all requests.
+- **Local Development**: Vite dev server reverse-proxies `/api`, `/health`, and `/docs` directly to `http://localhost:8000`.
+- **AWS Production**: Amazon CloudFront routes `/*` to your S3 bucket and `/api/*` + `/health` to your Application Load Balancer (ALB).
+- **Result**: Zero CORS headers to manage, zero preflight latency overhead, and no risk of browser CORS rejections.
 
 ---
 
@@ -63,16 +29,17 @@ cd backend
 source venv/bin/activate
 python run.py
 ```
-* Backend runs on: `http://localhost:8000`
-* Interactive API Docs: `http://localhost:8000/docs`
-* Health Check: `http://localhost:8000/health`
+* **Backend**: `http://localhost:8000`
+* **API Docs**: `http://localhost:8000/docs`
+* **Health Check**: `http://localhost:8000/health`
 
 ### Terminal 2: Frontend
 ```bash
 cd frontend
 npm run dev
 ```
-* Frontend runs on: `http://localhost:5173`
+* **Frontend App**: `http://localhost:5173`
+* The frontend makes relative calls (`/api/items`, `/health`), which are proxied without any CORS issues.
 
 ---
 
@@ -84,9 +51,8 @@ cd backend
 ./venv/bin/pytest
 ```
 
-### Frontend Build Check:
+### Frontend Build:
 ```bash
 cd frontend
 npm run build
 ```
-

@@ -1,6 +1,8 @@
 import { Item, ItemCreate, ItemUpdate, PaginatedItems, HealthStatus } from '../types/item';
 
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000').replace(/\/$/, '');
+// When empty or unset, relative paths are used (Same-Origin architecture).
+// Vite proxies /api, /health in local development; CloudFront proxies them in AWS production.
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
 
 export class ApiError extends Error {
   status: number;
@@ -27,7 +29,6 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
         const errorJson = await response.json();
         errorMessage = errorJson.detail || errorJson.message || errorMessage;
       } catch {
-        // Fallback to text
         const errorText = await response.text();
         if (errorText) errorMessage = errorText;
       }
@@ -45,7 +46,7 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
       throw error;
     }
     throw new ApiError(
-      `Failed to connect to backend at ${API_BASE_URL}. Ensure the FastAPI server is running and CORS allows this origin.`,
+      `Failed to connect to backend at ${url}. Ensure the FastAPI server is running.`,
       0
     );
   }
@@ -99,4 +100,3 @@ export const api = {
     });
   },
 };
-
