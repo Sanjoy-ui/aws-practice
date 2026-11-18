@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+backend/venv/
+
+# Environment variables
+.env
+*.local
+
+# Build artifacts
+dist/
+dist-ssr/
+build/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Databases
+*.db
+*.sqlite3
+
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/
+
